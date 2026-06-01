@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Pablo Aganza - Data Engineer and graduate student in Data Science at UC Berkeley (MIDS). Projects in data engineering, ML systems, NLP, and big data.">
+<title>Pablo Aganza</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<aside class="side-nav">
+  <button class="side-nav-btn" id="btn-top">↑</button>
+  <a href="#projects">Projects</a>
+  <a href="#work">Work</a>
+  <a href="#education">Education</a>
+  <a href="#skills">Skills</a>
+  <button class="side-nav-btn" id="btn-bottom">↓</button>
+</aside>
+
+<main>
+
+  <section class="about">
+    <div>
+      <h1>Pablo Aganza</h1>
+      <p>Graduate student in Data Science at UC Berkeley (MIDS) with experience building clinical data pipelines and ML systems. I work across data engineering, machine learning, model serving, and production software.</p>
+      <p>Open to full-time roles in data engineering, data science, and ML engineering.</p>
+      <div class="about-links">
+        <a href="mailto:pabloaganza1@gmail.com">pabloaganza1@gmail.com</a>
+        <a href="https://linkedin.com/in/pablo-aganza" target="_blank">LinkedIn</a>
+        <a href="https://github.com/pablo-aganza" target="_blank">GitHub</a>
+      </div>
+    </div>
+    <div class="photo-placeholder"><span>◐</span>Photo</div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="home-section" id="projects">
+    <h2 class="section-title">Projects</h2>
+
+    <a class="project-card" href="projects/wildfire/">
+      <div class="card-img"><img src="portfolio-images/wildfire_thumbnail.png" alt="Wildfire hotspot clustering illustration - scattered VIIRS detections collapsing into a coherent fire event"></div>
+      <div class="card-body">
+        <h3 class="card-title">Wildfire Risk Ranking from Satellite Data</h3>
+        <p class="card-desc">Near-real-time escalation scoring for emerging fire events using NASA FIRMS VIIRS detections, spatiotemporal clustering (ST-DBSCAN), and a supervised ML model trained on ICS-209 incident records.</p>
+        <span class="read-more">Read more &rarr;</span>
+      </div>
+    </a>
+
+    <a class="project-card" href="projects/w210/">
+      <div class="card-img"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 260'%3E%3Crect width='400' height='260' fill='%23f8f8f8'/%3E%3Cg fill='none' stroke='%231a1a1a' stroke-width='4' opacity='0.75'%3E%3Cpath d='M20 150 C55 150 55 100 90 100 S125 150 160 150 195 70 230 70 265 180 300 180 335 120 380 120'/%3E%3Cpath d='M20 178 C55 178 55 165 90 165 S125 178 160 178 195 150 230 150 265 190 300 190 335 168 380 168' opacity='0.35'/%3E%3C/g%3E%3Cg fill='%230066cc'%3E%3Ccircle cx='230' cy='70' r='7'/%3E%3Ccircle cx='300' cy='180' r='7'/%3E%3C/g%3E%3Ctext x='24' y='42' font-family='Inter,Arial,sans-serif' font-size='22' fill='%231a1a1a'%3EEEG seizure risk%3C/text%3E%3Ctext x='24' y='68' font-family='Inter,Arial,sans-serif' font-size='14' fill='%23666'%3E60-second prediction horizon%3C/text%3E%3Cline x1='24' y1='210' x2='376' y2='210' stroke='%23ddd'/%3E%3Ctext x='24' y='235' font-family='Inter,Arial,sans-serif' font-size='13' fill='%23999'%3EDATASCI 210 Capstone%3C/text%3E%3C/svg%3E" alt="EEG seizure risk waveform illustration"></div>
+      <div class="card-body">
+        <h3 class="card-title">Imminent Seizure Prediction</h3>
+        <p class="card-desc">A seizure prediction system using EEG signal processing, patient-specific modeling, and unsupervised autoencoders to flag preictal patterns about 60 seconds before onset.</p>
+        <span class="read-more">Read more &rarr;</span>
+      </div>
+    </a>
+
+    <a class="project-card" href="projects/w266/">
+      <div class="card-img"><img src="portfolio-images/img04.jpg" alt="Misinformation detection - knowledge graph connecting articles, entities, and domains"></div>
+      <div class="card-body">
+        <h3 class="card-title">Detecting Misinformation using NER, Knowledge Graphs, and GNNs</h3>
+        <p class="card-desc">A fake news detection pipeline that models articles, entities, source domains, sentiment, and fact-checking sources as a knowledge graph, then trains heterogeneous GNNs to classify misinformation - reaching 84% test accuracy across 600 model trainings.</p>
+        <span class="read-more">Read more &rarr;</span>
+      </div>
+    </a>
+
+    <a class="project-card" href="projects/w261/">
+      <div class="card-img"><img src="portfolio-images/img01.png" alt="Flight delay prediction - Spark pipeline and model comparison diagram"></div>
+      <div class="card-body">
+        <h3 class="card-title">Predicting Flight Departure Delays</h3>
+        <p class="card-desc">Regression pipeline across 31.7M flight records and 630M weather observations, processed on Apache Spark and Databricks, evaluating five model families including GNN and XGBoost.</p>
+        <span class="read-more">Read more &rarr;</span>
+      </div>
+    </a>
+
+
+  </section>
+
+  <!-- WORK -->
+  <section class="home-section" id="work">
+    <h2 class="section-title">Work</h2>
+    <div class="timeline-item">
+      <h3>Foresight Diagnostics - Data Engineer</h3>
+      <p class="meta">Remote &middot; July 2023 - January 2026</p>
+      <ul class="contrib-list">
+        <li>Reduced scientific team dataset preparation and validation time from 7 days to under 1 hour by leading development of a scalable clinical data pipeline for FDA submission workflows.</li>
+        <li>Accelerated new clinical data source integration from 2-3 days of custom engineering work to under 2 hours of configuration by building reusable validation modules across varied file formats.</li>
+        <li>Cut data issue investigation from 3-5 days to under 4 hours by surfacing data quality issues through structured logging, validation reports, and audit records.</li>
+        <li>Saved 20+ software engineering hours per week by building self-service export tooling for FDA submissions used by Assay Development teams.</li>
+        <li><a href="projects/pipeline/">Technical case study: Clinical Data Pipeline for FDA Submission &rarr;</a></li>
+      </ul>
+    </div>
+    <div class="timeline-item">
+      <h3>Foresight Diagnostics - Data Engineering Intern</h3>
+      <p class="meta">Remote &middot; January 2023 - July 2023</p>
+      <ul class="contrib-list">
+        <li>Built Python tools and SQL scripts to clean and transform research datasets from varied file formats for downstream analysis.</li>
+      </ul>
+    </div>
+    <div class="timeline-item">
+      <h3>Genalyte - Machine Learning Engineer Intern</h3>
+      <p class="meta">San Diego, CA &middot; May 2022 - July 2022</p>
+      <ul class="contrib-list">
+        <li>Automated blood diagnostic robot state classification by deploying a transfer-learning computer vision model to support R&amp;D testing workflows and quality-control checks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- EDUCATION -->
+  <section class="home-section" id="education">
+    <h2 class="section-title">Education</h2>
+    <div class="timeline-item">
+      <h3>University of California, Berkeley - M.S. Data Science</h3>
+      <p class="meta">Berkeley, CA &middot; January 2024 - May 2026 &middot; GPA: 3.92</p>
+      <p>Graduate program focused on data science, machine learning, data engineering, NLP, model serving and distributed systems.</p>
+      <ul class="contrib-list">
+        <li>Capstone: Imminent Seizure Prediction using EEG signal processing, patient-specific modeling, and unsupervised autoencoders.</li>
+        <li>ML systems: Deployed a DistilBERT sentiment analysis API using FastAPI, Redis, Docker, Kubernetes, AWS EKS, Istio, and HPA autoscaling.</li>
+        <li>NLP: Built a misinformation detection pipeline using NER, knowledge graphs, and GNNs over the FakeNewsNet corpus.</li>
+        <li>Machine learning at scale: Built Spark ML pipelines over large flight and weather datasets.</li>
+      </ul>
+    </div>
+    <div class="timeline-item">
+      <h3>Carnegie Mellon University - B.S. Mathematical Sciences</h3>
+      <p class="meta">Pittsburgh, PA &middot; August 2018 - May 2023 &middot; GPA: 3.30</p>
+      <p>Minor in Computer Science, with a concentration in Robotics.</p>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section class="home-section" id="skills">
+    <h2 class="section-title">Skills</h2>
+    <dl class="skills-dl">
+      <div class="skills-row">
+        <dt>Languages</dt>
+        <dd>Python, SQL, R, Bash</dd>
+      </div>
+      <div class="skills-row">
+        <dt>Data Science</dt>
+        <dd>Pandas, NumPy, Matplotlib, Seaborn</dd>
+      </div>
+      <div class="skills-row">
+        <dt>Machine Learning</dt>
+        <dd>PyTorch, TensorFlow/Keras, scikit-learn, XGBoost, Hugging Face Transformers</dd>
+      </div>
+      <div class="skills-row">
+        <dt>ML Tooling / MLOps</dt>
+        <dd>Optuna, FastAPI, Pydantic</dd>
+      </div>
+      <div class="skills-row">
+        <dt>Platforms &amp; DevOps</dt>
+        <dd>GCP, AWS, Docker, Kubernetes, Git, GitHub Actions, CI/CD</dd>
+      </div>
+      <div class="skills-row">
+        <dt>Data Platforms</dt>
+        <dd>PostgreSQL, BigQuery, Neo4j, Redis</dd>
+      </div>
+      <div class="skills-row">
+        <dt>Big Data / Distributed</dt>
+        <dd>Apache Spark, PySpark, Spark SQL, MLlib, Databricks, Hadoop, MapReduce, MrJob</dd>
+      </div>
+    </dl>
+  </section>
+
+</main>
+
+<footer>
+  <span>Pablo Aganza &middot; UC Berkeley MIDS &middot; 2026</span>
+  <span><a href="mailto:pabloaganza1@gmail.com">pabloaganza1@gmail.com</a></span>
+</footer>
+
+<script>
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+  document.getElementById('btn-top').addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  document.getElementById('btn-bottom').addEventListener('click', function() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
+</script>
+
+</body>
+</html>
