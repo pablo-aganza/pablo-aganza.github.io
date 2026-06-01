@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Predicting Flight Departure Delays — Spark ML pipeline over 31.7M flight records and 630M weather observations, with XGBoost, GNN, and forward-chaining cross-validation on Databricks.">
+<title>Predicting Flight Departure Delays — Pablo Aganza</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="nav-name" href="../">Pablo Aganza</a>
+    <div class="nav-links">
+      <a href="../">Projects</a>
+      <a href="../work.html">Work</a>
+      <a href="../education.html">Education</a>
+      <a href="../skills.html">Skills</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <a class="back-btn" href="../">&larr; Back to projects</a>
+  <p class="detail-meta">DATASCI 261 &middot; Machine Learning at Scale &middot; Team project &middot; Autumn 2025</p>
+  <h1 class="detail-title">Predicting Flight Departure Delays</h1>
+  <p class="detail-summary">A regression pipeline to predict US domestic departure delays in minutes using only information available two hours before scheduled departure. Built on 31.7M flight records and 630M hourly weather observations processed with Apache Spark on Databricks.</p>
+
+  <div class="project-tags">
+    <span>Apache Spark</span><span>PySpark</span><span>Databricks</span><span>XGBoost</span>
+    <span>PyTorch</span><span>PyTorch Geometric</span><span>NetworkX</span><span>Optuna</span><span>Python</span>
+  </div>
+
+  <div class="section">
+    <h4>Overview</h4>
+    <p>Data was sourced from the US Department of Transportation (2015&ndash;2021) and NOAA hourly weather records, joined and processed on a Databricks cluster autoscaling to 12 worker nodes (~384 GB RAM). A <strong>forward-chaining cross-validation</strong> scheme prevented future data from leaking into training.</p>
+    <p>76 features were engineered across 7 categories. Three had the biggest effect: tail tracking (the inbound aircraft&rsquo;s accumulated delay), 1-hop graph-convolutional network features capturing airport network spillover, and cyclical sin/cos temporal encoding.</p>
+  </div>
+
+  <div class="img-grid two">
+    <figure>
+      <div class="fig-img"><img src="../portfolio-images/img10.png" alt="Modeling pipeline"></div>
+      <figcaption>Fig. 1. Forward-chaining cross-validation pipeline.</figcaption>
+    </figure>
+    <figure>
+      <div class="fig-img"><img src="../portfolio-images/img11.png" alt="Temporal congestion heatmap"></div>
+      <figcaption>Fig. 2. Evening-rush delay corridor peaking Thursday&ndash;Friday 16:00&ndash;21:00.</figcaption>
+    </figure>
+  </div>
+
+  <div class="section">
+    <h4>Feature Engineering</h4>
+    <ul class="num-list">
+      <li><span class="n">01</span><div><strong>Tail tracking (the rotational domino effect)</strong><span>Reconstructed inbound aircraft flight chains so each flight carries the previous leg&rsquo;s arrival delay. Flights accumulate delay but rarely recover time.</span></div></li>
+      <li><span class="n">02</span><div><strong>Graph-convolutional network features</strong><span>1-hop GCN features capture weighted average delay of each airport&rsquo;s network neighbors. Average local delay rises from ~5 to over 21 minutes between the 1st and 9th decile of upstream pressure.</span></div></li>
+      <li><span class="n">03</span><div><strong>Cyclical temporal encoding</strong><span>Hour-of-day, day-of-week, and month encoded as sin/cos pairs. Midnight and 23:00 should be close together numerically, not 23 units apart.</span></div></li>
+    </ul>
+  </div>
+
+  <div class="img-grid two">
+    <figure>
+      <div class="fig-img"><img src="../portfolio-images/img12.png" alt="Tail tracking"></div>
+      <figcaption>Fig. 3. Tail tracking validation &mdash; density flares above y=x.</figcaption>
+    </figure>
+    <figure>
+      <div class="fig-img"><img src="../portfolio-images/img13.png" alt="Network spillover"></div>
+      <figcaption>Fig. 4. Network spillover &mdash; delay spikes sharply at the 9th decile.</figcaption>
+    </figure>
+  </div>
+
+  <div class="section">
+    <h4>Results (one-year test set)</h4>
+    <table class="results-table">
+      <thead><tr><th>Model</th><th>RMSE (min)</th><th>MAE (min)</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Mean Baseline</td><td>36.14</td><td>18.18</td><td>&mdash;</td></tr>
+        <tr><td>Linear Regression</td><td>32.75</td><td>14.16</td><td>Strong linear benchmark</td></tr>
+        <tr><td>Random Forest</td><td>33.70</td><td>15.33</td><td>&mdash;</td></tr>
+        <tr><td>MLP</td><td>35.70</td><td>17.02</td><td>Underperforms linear</td></tr>
+        <tr><td>Graph Neural Network</td><td>34.94</td><td>13.17</td><td>Lowest MAE; weaker on tails</td></tr>
+        <tr class="best"><td>XGBoost<span class="best-mark">&#9733; best</span></td><td>30.20</td><td>13.41</td><td>7.8% RMSE improvement over linear</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="img-grid two">
+    <figure>
+      <div class="fig-img"><img src="../portfolio-images/img14.png" alt="XGBoost feature importance"></div>
+      <figcaption>Fig. 5. XGBoost feature importance by gain; inbound arrival delay lag dominates.</figcaption>
+    </figure>
+    <figure>
+      <div class="fig-img"><img src="../portfolio-images/img15.png" alt="Actual vs predicted"></div>
+      <figcaption>Fig. 6. Actual vs. predicted density and residuals (log scale).</figcaption>
+    </figure>
+  </div>
+
+  <div class="img-grid">
+    <figure>
+      <div class="fig-img"><img src="../portfolio-images/img16.png" alt="GNN pipeline"></div>
+      <figcaption>Fig. 7. GNN pipeline: time slicing, graph construction, embeddings, and regression.</figcaption>
+    </figure>
+  </div>
+
+  <div class="section">
+    <h4>My Contributions</h4>
+    <ul class="contrib-list">
+      <li>Led EDA — identified the diurnal delay snowball effect, the two major seasonal peaks (summer convective storms and winter holiday surges), and carrier-level hub geography patterns; validated the join pipeline preserved the original departure delay distribution.</li>
+      <li>Designed and implemented the GNN end-to-end: snapshot-temporal architecture using PyTorch Geometric TransformerConv layers, Optuna Bayesian hyperparameter search, top-K airport pruning, and single-snapshot batching to keep memory tractable on the cluster.</li>
+    </ul>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+  <span>Pablo Aganza</span>
+  <span>
+    <a href="mailto:pabloaganza1@gmail.com">pabloaganza1@gmail.com</a> &middot;
+    <a href="https://github.com/pablo-aganza" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 96" width="13" height="13" fill="currentColor" style="vertical-align:-1px;margin-right:3px"><path d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></svg>pablo-aganza</a> &middot;
+    <a href="https://linkedin.com/in/pablo-aganza" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="vertical-align:-1px;margin-right:3px"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>Pablo Aganza</a>
+  </span>
+  </div>
+</footer>
+
+</body>
+</html>

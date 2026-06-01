@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Detecting Misinformation using NER, Knowledge Graphs, and GNNs — fake news detection pipeline reaching 84% test accuracy across 400 model runs on FakeNewsNet.">
+<title>Misinformation Detection — Pablo Aganza</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="nav-name" href="../">Pablo Aganza</a>
+    <div class="nav-links">
+      <a href="../">Projects</a>
+      <a href="../work.html">Work</a>
+      <a href="../education.html">Education</a>
+      <a href="../skills.html">Skills</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <a class="back-btn" href="../">&larr; Back to projects</a>
+  <p class="detail-meta">DATASCI 266 &middot; NLP with Deep Learning &middot; Group project &middot; Spring 2025</p>
+  <h1 class="detail-title">Detecting Misinformation using NER, Knowledge Graphs, and GNNs</h1>
+  <p class="detail-summary">A fake news detection system that represents articles as nodes in a knowledge graph, connects them to named entities, publishing domains, fact-checking sources, and sentiment labels, then classifies misinformation using graph neural networks rather than treating each article in isolation.</p>
+
+  <div style="margin-bottom:1.5rem;">
+    <a href="https://github.com/pablo-aganza/datasci-266-project/blob/main/Research_Final_Paper.pdf" target="_blank"
+       style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.875rem;color:#0066cc;text-decoration:none;border:1px solid #d0e4f7;padding:0.4rem 0.9rem;border-radius:4px;background:#f5f9ff;">
+      &#128196; Read the paper
+    </a>
+  </div>
+
+  <div class="project-tags">
+    <span>PyTorch Geometric</span><span>Heterogeneous GNNs</span><span>GraphSAGE</span><span>spaCy</span>
+    <span>BERT-NER</span><span>RoBERTa-NER</span><span>Sentence Transformers</span><span>VADER</span><span>Optuna</span>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item"><span class="stat-val">21,407</span><span class="stat-label">Articles</span></div>
+    <div class="stat-item"><span class="stat-val">~42K</span><span class="stat-label">Graph Nodes</span></div>
+    <div class="stat-item"><span class="stat-val">~180K</span><span class="stat-label">Graph Edges</span></div>
+    <div class="stat-item"><span class="stat-val">84.03%</span><span class="stat-label">Best Test Accuracy</span></div>
+  </div>
+
+  <div class="section">
+    <h4>Problem</h4>
+    <p>Most fake news classifiers treat each article as an isolated text classification problem. This project tested a different hypothesis: misinformation leaves <strong>relational fingerprints</strong>. Articles from the same domains, mentioning the same emotionally charged entities, or sharing similar sentiment patterns can be jointly suspicious in ways that a per-article model may miss.</p>
+    <p>The question was whether a <strong>knowledge graph + GNN</strong> could capture those relationships and outperform per-article models on FakeNewsNet.</p>
+  </div>
+
+  <div class="section">
+    <h4>Data &amp; Feature Engineering</h4>
+    <p>The final dataset contained <strong>21,407 cleaned articles</strong> from FakeNewsNet, combining PolitiFact and GossipCop sources with a roughly <strong>3:1 real-to-fake imbalance</strong>. All models used weighted cross-entropy to reduce majority-class collapse.</p>
+    <p>I compared three NER pipelines to see how entity extraction quality affects the downstream graph: spaCy <code>en_core_web_lg</code>, BERT <code>dslim/bert-base-NER</code>, and RoBERTa <code>Jean-Baptiste/roberta-large-ner-english</code>. Article titles were embedded with <strong>all-MiniLM-L6-v2</strong> Sentence Transformers, producing 384-dimensional article node features. VADER sentiment converted each title into a positive, negative, or neutral label.</p>
+  </div>
+
+  <div class="section">
+    <h4>Knowledge Graph Design</h4>
+    <p>The graph represents articles as the central node type and connects them to source domains, verification sources, named entities, and sentiment labels. Entity co-occurrence edges connect entities mentioned in the same headline, while reverse edges are added for bidirectional message passing.</p>
+    <ul class="num-list">
+      <li><span class="n">01</span><div><strong>Article nodes</strong><span>21,407 articles with 384-dimensional MiniLM headline embeddings.</span></div></li>
+      <li><span class="n">02</span><div><strong>Domain nodes</strong><span>2,324 publishing domains extracted from article URLs.</span></div></li>
+      <li><span class="n">03</span><div><strong>Entity nodes</strong><span>Named entities extracted by spaCy, BERT-NER, or RoBERTa-NER.</span></div></li>
+      <li><span class="n">04</span><div><strong>Sentiment nodes</strong><span>Positive, negative, and neutral VADER labels used as explicit graph structure.</span></div></li>
+      <li><span class="n">05</span><div><strong>Verification nodes</strong><span>PolitiFact and GossipCop fact-checking sources encoded as graph nodes.</span></div></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h4>Modeling Approach</h4>
+    <p>I evaluated both homogeneous and heterogeneous graph neural networks. The homogeneous baseline flattened every node and edge type into a single graph and used standard <strong>GCNConv</strong> layers. The heterogeneous model preserved node and edge types using <strong>HeteroConv</strong> with <strong>SAGEConv</strong>, allowing separate message-passing behavior for article-domain, article-entity, article-sentiment, article-verification, and entity-entity relationships.</p>
+    <p>Each configuration was tuned with <strong>Optuna Bayesian optimization</strong>. The experimental grid covered 8 configurations (3 NER models &times; 2 graph types, with sentiment ablations for spaCy), with 50 trials each for <strong>400 total model trainings</strong>.</p>
+  </div>
+
+  <div class="section">
+    <h4>Results</h4>
+    <table class="results-table">
+      <thead>
+        <tr><th>Configuration</th><th>Test Accuracy</th><th>Val Accuracy</th><th>Test Loss</th></tr>
+      </thead>
+      <tbody>
+        <tr class="best"><td>RoBERTa + Heterogeneous GNN + Sentiment <span class="best-mark">best</span></td><td>84.03%</td><td>85.66%</td><td>0.4061</td></tr>
+        <tr><td>spaCy + Heterogeneous GNN + Sentiment</td><td>83.37%</td><td>82.53%</td><td>0.4269</td></tr>
+        <tr><td>BERT + Homogeneous GCN + Sentiment</td><td>82.58%</td><td>80.85%</td><td>0.4249</td></tr>
+        <tr><td>BERT + Heterogeneous GNN + Sentiment</td><td>81.32%</td><td>83.33%</td><td>0.4384</td></tr>
+        <tr><td>spaCy + Homogeneous GCN + Sentiment</td><td>81.22%</td><td>79.50%</td><td>0.4475</td></tr>
+        <tr><td>spaCy + Heterogeneous GNN &minus; Sentiment</td><td>80.76%</td><td>82.06%</td><td>0.4054</td></tr>
+        <tr><td>spaCy + Homogeneous GCN &minus; Sentiment</td><td>80.43%</td><td>82.77%</td><td>0.4671</td></tr>
+        <tr><td>RoBERTa + Homogeneous GCN + Sentiment</td><td>78.94%</td><td>80.80%</td><td>0.4669</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h4>Key Findings</h4>
+    <ul class="num-list">
+      <li><span class="n">01</span><div><strong>Heterogeneous message passing mattered.</strong><span>Preserving node and edge types generally outperformed flattening the graph, with the RoBERTa heterogeneous model beating its homogeneous counterpart by roughly 5 percentage points.</span></div></li>
+      <li><span class="n">02</span><div><strong>Sentiment edges added signal.</strong><span>Removing sentiment from the spaCy heterogeneous graph reduced test accuracy from 83.37% to 80.76%, confirming that headline tone contributed useful relational information.</span></div></li>
+      <li><span class="n">03</span><div><strong>NER and graph architecture interact.</strong><span>RoBERTa performed best with the heterogeneous graph but worst in the homogeneous setting, showing that entity extraction quality and GNN design must be selected jointly.</span></div></li>
+      <li><span class="n">04</span><div><strong>Headline-only relational modeling was competitive.</strong><span>The best model reached 84.03% test accuracy using article titles and graph structure, improving on a comparable 73% propagation-based baseline without relying on social propagation data.</span></div></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h4>What I Would Do Next</h4>
+    <p>Adding social propagation edges from FakeNewsNet's tweet IDs would be the most impactful extension, since fake and real news tend to spread through different user communities. Other directions: full-article embeddings instead of headline-only, testing generalization across PolitiFact and GossipCop separately, and GNNExplainer attribution to see which entities and domains drive each prediction.</p>
+  </div>
+
+  <div class="section">
+    <h4>My Contributions</h4>
+    <ul class="contrib-list">
+      <li>Defined the core project idea: encode news articles and their relational context as a heterogeneous knowledge graph and classify with GNNs.</li>
+      <li>Led full EDA — uncovered the domain skew, sentiment distribution shift (fake headlines skew more negative), and sensational-vocabulary patterns that motivated the graph's structure.</li>
+      <li>Integrated the spaCy NER pipeline for entity extraction and led code cleanup and restructuring so all configurations could run concurrently.</li>
+    </ul>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+  <span>Pablo Aganza</span>
+  <span>
+    <a href="mailto:pabloaganza1@gmail.com">pabloaganza1@gmail.com</a> &middot;
+    <a href="https://github.com/pablo-aganza" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 96" width="13" height="13" fill="currentColor" style="vertical-align:-1px;margin-right:3px"><path d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></svg>pablo-aganza</a> &middot;
+    <a href="https://linkedin.com/in/pablo-aganza" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="vertical-align:-1px;margin-right:3px"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>Pablo Aganza</a>
+  </span>
+  </div>
+</footer>
+
+</body>
+</html>
