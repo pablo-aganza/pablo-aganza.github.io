@@ -56,34 +56,6 @@
   </div>
 
   <div class="section">
-    <h4>Plan</h4>
-    <p><strong>Phase 1 - Data Exploration</strong><br>
-    EDA across all four data sources: VIIRS hotspot detections, ICS-209-PLUS incident records, WFIGS fire perimeters, and FIRMS archive.</p>
-
-    <p><strong>Phase 2 - Data Engineering Pipeline</strong><br>
-    Eight-stage pipeline from raw FIRMS detections to labeled training matrix.</p>
-    <ul class="contrib-list" style="margin: 0.25rem 0 0.75rem;">
-      <li><strong>Stage 1a</strong> - ETL / Validation: ingest FIRMS rows, validate with Pydantic, quarantine failures</li>
-      <li><strong>Stage 1b</strong> - Preprocessing: dedup by 1 km grid and 15-min bins, filter to vegetation fires (type = 0)</li>
-      <li><strong>Stage 2</strong> - Spatial Partitioning: tile into 1°&times;1° cells with 0.1° overlap</li>
-      <li><strong>Stage 3</strong> - ST-DBSCAN Clustering: cluster detections into fire events (&epsilon;&#x2081; = 1 km, &epsilon;&#x2082; = 48 h <- to start with)</li>
-      <li><strong>Stage 4</strong> - Aggregation: build daily cluster snapshots, gap-fill satellite pass gaps</li>
-      <li><strong>Stage 5</strong> - Feature Engineering: compute FRP, growth rate, spread, area, perimeter proximity</li>
-      <li><strong>Stage 6</strong> - Labeling: match clusters to ICS-209-PLUS records via three-way distance split</li>
-      <li><strong>Stage 7</strong> - Feature Matrix Assembly: assemble train (2018&ndash;2020) and test (2023) splits</li>
-    </ul>
-
-    <p><strong>Phase 3 - Pipeline Module Implementation</strong><br>
-    Takes validated logic from each stage's EDA notebook and consolidates it into clean, importable Python modules. Goal: a single command that runs the full pipeline on raw parquet inputs and produces <code>X_train</code>, <code>y_train</code>, <code>X_test</code> as output artifacts.</p>
-
-    <p><strong>Phase 4 - Risk Model</strong><br>
-    XGBoost classifier trained on the assembled feature matrix, optimized for PR-AUC given severe class imbalance (~1&ndash;5% positive rate).</p>
-
-    <p><strong>Phase 5 - Serving</strong><br>
-    FastAPI service with Redis cache layer exposing scored fire events in near-real-time.</p>
-  </div>
-
-  <div class="section">
     <h4>System</h4>
     <p>The live system is a modular monolith: a single deployable unit where each pipeline stage is fully isolated behind a typed data contract. Dagster orchestrates the asset graph - tracking what was materialized, when, and with what parameters - so any stage can be re-run in isolation without touching the others. Postgres/PostGIS stores every pipeline artifact, Redis caches the serving layer, and MLflow manages every training run and model promotion.</p>
 
@@ -92,129 +64,55 @@
     <div class="diagram-zoomable">
     <pre class="mermaid" style="margin:1.75rem 0">
 flowchart LR
-    subgraph EXP_TRACK["Experimentation Track"]
+    subgraph SOURCES["Data Sources"]
+        FIRMS["FIRMS API + Archive<br/>satellite hotspots"]
+        GROUND["WFIGS · ICS-209<br/>perimeters · labels"]
+    end
+
+    subgraph PIPELINE["Pipeline — Dagster"]
         direction TB
-        EDA["EDA Notebooks<br/>Phase 1–2 analysis"]
-        MANUAL["Manual Training Run<br/>hyperparameter search"]
+        ETL["ETL + Validation"]
+        PROC["cluster · feature · label"]
+        MODEL["XGBoost Risk Model"]
     end
 
-    subgraph SOURCES["External Data Sources"]
-        FIRMS_NRT["FIRMS API<br/>NRT · ~3h cadence"]
-        FIRMS_ARC["FIRMS Archive<br/>historical parquet"]
-        WFIGS_SRC["WFIGS REST API<br/>fire perimeters"]
-        ICS_SRC["ICS-209-PLUS CSV<br/>ground truth labels"]
-    end
+    PG[("Postgres + PostGIS")]
 
-    subgraph PIPELINE["Automated Pipeline - Dagster Orchestrated"]
+    MLFLOW["MLflow<br/>experiment tracking<br/>model registry"]
+
+    subgraph SERVING["Serving"]
         direction TB
-        ETL["Stage 1a<br/>ETL / Validation<br/>Pydantic · quarantine"]
-        PROC["Stages 1b–7<br/>preprocess → cluster → feature → label"]
-        MODEL["Phase 4<br/>XGBoost Risk Model<br/>PR-AUC · scale_pos_weight"]
+        REDIS["Redis"]
+        FAPI["FastAPI"]
     end
 
-    subgraph PG["Postgres + PostGIS"]
-        direction TB
-        STG_S[("staging")]
-        PIPE_S[("pipeline")]
-        LAB_S[("labels")]
-        API_S[("api<br/>materialized views")]
-        MON_S[("monitoring")]
-    end
-
-    subgraph MLOPS["MLOps"]
-        direction TB
-        MLFLOW["MLflow<br/>experiment tracking<br/>model registry"]
-        CICD["CI/CD · GitHub Actions<br/>test → build → deploy<br/>model evaluation gate"]
-        MONITOR["Performance Monitoring<br/>realized precision · drift detection"]
-    end
-
-    subgraph SERVING["Phase 5 - Serving"]
-        direction TB
-        REDIS["Redis<br/>TTL=3h · cache-aside<br/>stage locks · rate limiting"]
-        FAPI["FastAPI<br/>GET /fires/active<br/>GET /fires/{id}<br/>GET /fires?lat=&amp;lon="]
-    end
-
-    ALERT(["Slack · PagerDuty"])
+    MONITOR(["Monitoring"])
     CLIENT(("Client"))
 
-    FIRMS_NRT --> ETL
-    FIRMS_ARC --> ETL
-    ETL -->|valid rows| STG_S
-    ETL -.->|quarantined| STG_S
-    STG_S --> PROC
-    WFIGS_SRC -.->|perimeter proximity| PROC
-    ICS_SRC --> PROC
-    PROC --> PIPE_S
-    PROC --> LAB_S
-
-    PIPE_S --> MODEL
-    LAB_S --> MODEL
-    EDA --> MANUAL
-    MANUAL -->|log experiment| MLFLOW
-    MODEL -->|log metrics + artifact| MLFLOW
-    MLFLOW -->|load Production model| MODEL
-    CICD -->|deploy pipeline| PIPELINE
-    CICD -->|deploy api| SERVING
-
-    MODEL --> API_S
-    PIPE_S --> API_S
-    API_S --> REDIS
+    FIRMS --> ETL
+    ETL --> PG
+    GROUND --> PROC
+    PG --> PROC
+    PROC --> PG
+    PROC --> MODEL
+    MODEL --> MLFLOW
+    MLFLOW --> MODEL
+    MODEL --> PG
+    PG --> REDIS
     REDIS --> FAPI
-    API_S -.->|cache miss| FAPI
     FAPI --> CLIENT
-
-    FAPI -->|prediction logs| MON_S
-    MON_S --> MONITOR
-    WFIGS_SRC -.->|outcome join| MONITOR
-    MONITOR -.->|drift alert| ALERT
-    ALERT -.->|human initiates retrain| MLFLOW
+    FAPI -.-> MONITOR
+    GROUND -.-> MONITOR
+    MONITOR -.-> MLFLOW
     </pre>
     <p class="diagram-zoom-hint">Click to enlarge</p>
     </div>
 
     <h4 style="margin-top:2rem">Design decisions</h4>
-    <p><strong>Dagster over Airflow/Prefect.</strong> The pipeline produces a named, typed artifact at each stage, which maps directly to Dagster's asset model. Every stage is tracked: what was materialized, when, from what inputs, and with what parameters. If clustering logic changes, Dagster re-materializes from Stage 3 without re-running ETL and preprocessing upstream. Airflow's DAG-first model is less natural for artifact-centric pipelines; Prefect is a reasonable alternative but lacks the built-in asset catalog and lineage graph that replace a lot of custom bookkeeping.</p>
-    <p><strong>Five-schema Postgres design.</strong> Each schema has a distinct role. <code>staging</code> is append-only: rows are never modified after insert, and validation failures are quarantined with their full Pydantic error payload rather than dropped. <code>pipeline</code> holds cleaned artifacts from each stage. <code>labels</code> holds ICS-209 ground truth, loaded once. <code>api</code> contains materialized views refreshed after each pipeline run, optimized for low-latency reads. <code>monitoring</code> tracks prediction outcomes for the feedback loop. Keeping these separated prevents the operational store from leaking into the analytical store and makes the access patterns for each schema explicit.</p>
-    <p><strong>Pipeline-driven Redis invalidation.</strong> The pipeline runs every ~3 hours; without caching, every <code>GET /fires/active</code> request triggers a spatial join across hundreds of clusters. On pipeline completion, the active fires key is deleted and a version integer is incremented atomically. Nearby-query cache keys embed the version prefix, so a single increment invalidates all of them without a slow <code>SCAN + DELETE</code> loop. A 3-hour TTL acts as a safety net if the invalidation call fails: the cache self-heals within one FIRMS cycle.</p>
-    <p><strong>Rolling-window clustering.</strong> ST-DBSCAN re-runs over a 7&ndash;14 day sliding window each cycle rather than incrementally appending to existing clusters. Satellite passes shift hotspot positions slightly between observations, so incremental assignment would accumulate positional drift over time. A clean re-run is simpler and avoids that state management complexity for v1.</p>
-    <p><strong>Three-way label split.</strong> ICS-209 only files reports for fires above a complexity threshold (~100&ndash;300 acres depending on jurisdiction). A cluster that burned 80 acres and was quickly contained never generates a report &mdash; but it can't safely be called a true negative either. Forcing a negative label on those cases corrupts training. Clusters within 10&ndash;50&nbsp;km of an ICS-209 origin are left unlabeled and excluded.</p>
-    <p><strong>XGBoost and PR-AUC.</strong> The feature set is tabular and the class imbalance is severe (~1&ndash;5% positive rate). XGBoost handles imbalance natively via <code>scale_pos_weight</code> and tolerates nullable CV feature columns without imputation &mdash; useful since the CV pipeline phase isn't built yet. A model that predicts "not a significant fire" for everything achieves 95%+ accuracy and is useless; precision-recall AUC is the right metric for a system that needs high recall at a controlled false positive rate.</p>
-  </div>
-
-  <div class="section">
-    <h4>Status</h4>
-    <p><strong>Complete:</strong> EDA across all four data sources; ~1.24M CA VIIRS hotspots downloaded and spot-checked; ST-DBSCAN parameters tested against the DOE fire (450k acres, Aug 2020); labeling strategy, feature definitions, and train/test split finalized.</p>
-
-    <!-- Train/test timeline -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 72" style="width:100%;max-width:620px;display:block;margin:1.25rem 0" role="img" aria-label="Train/test split: 2018 to 2020 training, 2021 to 2022 unlabeled, 2023 test">
-      <!-- Training segment (3 years = 300px) -->
-      <rect x="10" y="18" width="300" height="26" rx="3" fill="#d8eedf" stroke="#9fcfb0" stroke-width="1"/>
-      <text x="160" y="35" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#2d6a4f">Training (labeled)</text>
-      <!-- Unlabeled segment (2 years = 200px) -->
-      <rect x="310" y="18" width="200" height="26" rx="0" fill="#f0f0f0" stroke="#d0d0d0" stroke-width="1"/>
-      <text x="410" y="35" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#888">Unlabeled</text>
-      <!-- Test segment (1 year = 100px) -->
-      <rect x="510" y="18" width="100" height="26" rx="3" fill="#dce8f5" stroke="#a8c4e0" stroke-width="1"/>
-      <text x="560" y="35" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#2c5f8a">Test</text>
-      <!-- Tick marks and year labels -->
-      <line x1="10"  y1="44" x2="10"  y2="50" stroke="#ccc" stroke-width="1"/>
-      <line x1="110" y1="44" x2="110" y2="50" stroke="#ccc" stroke-width="1"/>
-      <line x1="210" y1="44" x2="210" y2="50" stroke="#ccc" stroke-width="1"/>
-      <line x1="310" y1="44" x2="310" y2="50" stroke="#ccc" stroke-width="1"/>
-      <line x1="410" y1="44" x2="410" y2="50" stroke="#ccc" stroke-width="1"/>
-      <line x1="510" y1="44" x2="510" y2="50" stroke="#ccc" stroke-width="1"/>
-      <line x1="610" y1="44" x2="610" y2="50" stroke="#ccc" stroke-width="1"/>
-      <text x="10"  y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#aaa">2018</text>
-      <text x="110" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#aaa">2019</text>
-      <text x="210" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#aaa">2020</text>
-      <text x="310" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#aaa">2021</text>
-      <text x="410" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#aaa">2022</text>
-      <text x="510" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#aaa">2023</text>
-      <text x="610" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#aaa">2024</text>
-    </svg>
-
-    <p><strong>In progress:</strong> Data engineering pipeline (preprocessing through feature matrix assembly).</p>
-    <p><strong>Planned:</strong> XGBoost risk model &rarr; FastAPI serving layer &rarr; Docker deployment. There's also an optional CV branch that pulls features from raw VIIRS thermal IR imagery (Band I4) via a lightweight CNN. It's designed as an additive step so it can be introduced later without changing downstream schemas.</p>
+    <p><strong>Dagster over Airflow/Prefect.</strong> Each pipeline stage produces a named, typed artifact, which maps naturally to Dagster's asset model. If clustering logic changes, only the stages downstream of clustering re-run; ETL and preprocessing stay cached.</p>
+    <p><strong>Rolling-window clustering.</strong> ST-DBSCAN re-runs over a sliding window each cycle rather than incrementally updating existing clusters. Satellite passes shift hotspot positions slightly between observations, so incremental assignment would accumulate positional drift; a clean re-run avoids that.</p>
+    <p><strong>Three-way label split.</strong> ICS-209 only files reports above a complexity threshold (~100–300 acres). A cluster that burned out below that threshold never generates a report, but it can't safely be called a true negative either. Ambiguous clusters are left unlabeled and excluded from training.</p>
+    <p><strong>PR-AUC over accuracy.</strong> Class imbalance is severe (~1–5% positive rate). A model that always predicts "not significant" hits 95%+ accuracy and is useless. Precision-recall AUC is the right metric for a system where the cost of missing a fast-moving fire far exceeds the cost of a false alarm.</p>
   </div>
 
 </main>
