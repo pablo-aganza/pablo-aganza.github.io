@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Detecting Misinformation using NER, Knowledge Graphs, and GNNs — fake news detection pipeline reaching 84% test accuracy across 400 model runs on FakeNewsNet.">
+<meta name="description" content="Detecting Misinformation using NER, Knowledge Graphs, and GNNs - fake news detection pipeline reaching 84% test accuracy across 400 model runs on FakeNewsNet.">
 <title>Misinformation Detection — Pablo Aganza</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +27,7 @@
 
 <main>
   <a class="back-btn" href="../">&larr; Back to projects</a>
-  <p class="detail-meta">DATASCI 266 &middot; NLP with Deep Learning &middot; Group project &middot; Spring 2025</p>
+  <p class="detail-meta">UC Berkeley DATASCI 266 &middot; NLP with Deep Learning &middot; Group project &middot; Spring 2025</p>
   <h1 class="detail-title">Detecting Misinformation using NER, Knowledge Graphs, and GNNs</h1>
   <p class="detail-summary">A fake news detection system that represents articles as nodes in a knowledge graph, connects them to named entities, publishing domains, fact-checking sources, and sentiment labels, then classifies misinformation using graph neural networks rather than treating each article in isolation.</p>
 
@@ -52,14 +52,14 @@
 
   <div class="section">
     <h4>Problem</h4>
-    <p>Most fake news classifiers treat each article as an isolated text classification problem. This project tested a different hypothesis: misinformation leaves <strong>relational fingerprints</strong>. Articles from the same domains, mentioning the same emotionally charged entities, or sharing similar sentiment patterns can be jointly suspicious in ways that a per-article model may miss.</p>
-    <p>The question was whether a <strong>knowledge graph + GNN</strong> could capture those relationships and outperform per-article models on FakeNewsNet.</p>
+    <p>Most fake news classifiers treat each article as an isolated text classification problem. This project tested a different hypothesis: misinformation leaves relational fingerprints. Articles from the same domains, mentioning the same emotionally charged entities, or sharing similar sentiment patterns can be jointly suspicious in ways that a per-article model may miss.</p>
+    <p>The question was whether a knowledge graph + GNNcould capture those relationships and outperform per-article models on FakeNewsNet.</p>
   </div>
 
   <div class="section">
     <h4>Data &amp; Feature Engineering</h4>
-    <p>The final dataset contained <strong>21,407 cleaned articles</strong> from FakeNewsNet, combining PolitiFact and GossipCop sources with a roughly <strong>3:1 real-to-fake imbalance</strong>. All models used weighted cross-entropy to reduce majority-class collapse.</p>
-    <p>I compared three NER pipelines to see how entity extraction quality affects the downstream graph: spaCy <code>en_core_web_lg</code>, BERT <code>dslim/bert-base-NER</code>, and RoBERTa <code>Jean-Baptiste/roberta-large-ner-english</code>. Article titles were embedded with <strong>all-MiniLM-L6-v2</strong> Sentence Transformers, producing 384-dimensional article node features. VADER sentiment converted each title into a positive, negative, or neutral label.</p>
+    <p>The final dataset contained 21,407 cleaned articles from FakeNewsNet, combining PolitiFact and GossipCop sources with a roughly 3:1 real-to-fake imbalance. All models used weighted cross-entropy to reduce majority-class collapse.</p>
+    <p>We compared three NER pipelines to see how entity extraction quality affects the downstream graph: spaCy <code>en_core_web_lg</code>, BERT <code>dslim/bert-base-NER</code>, and RoBERTa <code>Jean-Baptiste/roberta-large-ner-english</code>. Article titles were embedded with all-MiniLM-L6-v2 Sentence Transformers, producing 384-dimensional article node features. VADER sentiment converted each title into a positive, negative, or neutral label.</p>
   </div>
 
   <div class="section">
@@ -76,8 +76,8 @@
 
   <div class="section">
     <h4>Modeling Approach</h4>
-    <p>I evaluated both homogeneous and heterogeneous graph neural networks. The homogeneous baseline flattened every node and edge type into a single graph and used standard <strong>GCNConv</strong> layers. The heterogeneous model preserved node and edge types using <strong>HeteroConv</strong> with <strong>SAGEConv</strong>, allowing separate message-passing behavior for article-domain, article-entity, article-sentiment, article-verification, and entity-entity relationships.</p>
-    <p>Each configuration was tuned with <strong>Optuna Bayesian optimization</strong>. The experimental grid covered 8 configurations (3 NER models &times; 2 graph types, with sentiment ablations for spaCy), with 50 trials each for <strong>400 total model trainings</strong>.</p>
+    <p>We evaluated both homogeneous and heterogeneous graph neural networks. The homogeneous baseline flattened every node and edge type into a single graph and used standard GCNConv layers. The heterogeneous model preserved node and edge types using HeteroConv with SAGEConv, allowing separate message-passing behavior for article-domain, article-entity, article-sentiment, article-verification, and entity-entity relationships.</p>
+    <p>Each configuration was tuned with Optuna Bayesian optimization. The experimental grid covered 8 configurations (3 NER models &times; 2 graph types, with sentiment ablations for spaCy), with 50 trials each for 400 total model trainings.</p>
   </div>
 
   <div class="section">
@@ -118,7 +118,7 @@
     <h4>My Contributions</h4>
     <ul class="contrib-list">
       <li>Defined the core project idea: encode news articles and their relational context as a heterogeneous knowledge graph and classify with GNNs.</li>
-      <li>Led full EDA — uncovered the domain skew, sentiment distribution shift (fake headlines skew more negative), and sensational-vocabulary patterns that motivated the graph's structure.</li>
+      <li>Led full EDA: uncovered the domain skew, sentiment distribution shift (fake headlines skew more negative), and sensational-vocabulary patterns that motivated the graph's structure.</li>
       <li>Integrated the spaCy NER pipeline for entity extraction and led code cleanup and restructuring so all configurations could run concurrently.</li>
     </ul>
   </div>
